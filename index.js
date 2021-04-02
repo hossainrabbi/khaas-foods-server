@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const admin = require('firebase-admin');
-const serviceAccount = require('./config/khaas-foods-123-firebase-adminsdk-mie3u-dc91d9daaa.json');
+const serviceAccount = require('./khaas-foods-123-firebase-adminsdk-mie3u-dc91d9daaa.json');
 require('dotenv').config();
 
 const app = express();
