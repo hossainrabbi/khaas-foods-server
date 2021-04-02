@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
+const admin = require('firebase-admin');
+const serviceAccount = require('./config/khaas-foods-123-firebase-adminsdk-mie3u-dc91d9daaa.json');
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
+
 const client = new MongoClient(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -20,7 +26,11 @@ const client = new MongoClient(uri, {
 client.connect((err) => {
     const foodsCollection = client
         .db(`${process.env.DB_NAME}`)
-        .collection(`${process.env.DB_COLLECTION}`);
+        .collection(`${process.env.DB_FOODS_COLLECTION}`);
+
+    const buyCollection = client
+        .db(`${process.env.DB_NAME}`)
+        .collection(`${process.env.DB_BUY_COLLECTION}`);
 
     app.get('/foods', (req, res) => {
         foodsCollection.find({}).toArray((err, result) => {
@@ -33,6 +43,29 @@ client.connect((err) => {
         foodsCollection.insertOne(newfood).then((result) => {
             res.send(result.insertedCount > 0);
         });
+    });
+
+    app.get('/buyData', (req, res) => {
+        buyCollection
+            .find({ email: req.query.email })
+            .toArray((err, result) => {
+                res.send(result);
+            });
+    });
+
+    app.post('/addBuyData', (req, res) => {
+        const newfood = req.body;
+        buyCollection.insertOne(newfood).then((result) => {
+            res.send(result.insertedCount > 0);
+        });
+    });
+
+    app.delete('/delete/:id', (req, res) => {
+        foodsCollection
+            .deleteOne({ _id: ObjectId(req.params.id) })
+            .then((result) => {
+                res.send(result.deletedCount > 0);
+            });
     });
 
     err
